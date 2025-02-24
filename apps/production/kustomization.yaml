@@ -4,4 +4,6 @@ resources:
   - podinfo.yaml
   - ./apps.ibb/deployment-ibb-frontend.yml
   - ./apps.ibb/svc-ibb-frontend.yml
+  - ./apps.impv/deployment-impv-frontend.yml
+  - ./apps.impv/svc-impv-frontend.yml
   - ./cronjobs/ecr-cronjob.yml
