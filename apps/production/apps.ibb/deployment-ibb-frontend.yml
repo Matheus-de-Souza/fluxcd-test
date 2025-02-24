@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ibb-frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ibb-frontend
+  template:
+    metadata:
+      labels:
+        app: ibb-frontend
+    spec:
+      containers:
+      - name: ibb-frontend
+        image: 905418363924.dkr.ecr.us-east-2.amazonaws.com/ibb-frontend:latest
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+        - name: aws-ecr-registry

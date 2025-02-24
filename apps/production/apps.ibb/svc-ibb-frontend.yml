@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-ibb-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: ibb-frontend
+  ports:
+  - port: 80
