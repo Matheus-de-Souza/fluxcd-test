@@ -1,0 +1,80 @@
+# baseado neste post
+# https://skryvets.com/blog/2021/03/15/kubernetes-pull-image-from-private-ecr-registry/
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecr-registry-helper-cm
+  namespace: default
+data:
+  AWS_REGION: "us-east-2"
+  DOCKER_SECRET_NAME: aws-ecr-registry
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-ecr-registry
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-full-access-to-secrets
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["aws-ecr-registry"]
+  verbs: ["delete"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ecr-registry-role-binding
+subjects:
+- kind: ServiceAccount
+  name: sa-ecr-registry
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: role-full-access-to-secrets
+  apiGroup: ""
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ecr-registry-helper
+spec:
+  schedule: "0 */10 * * *"
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sa-ecr-registry
+          containers:
+          - name: ecr-registry-helper
+            image: dev4jc/kubectl:latest
+            imagePullPolicy: Always
+            envFrom:
+              - secretRef:
+                  name: ecr-registry-helper-secrets
+              - configMapRef:
+                  name: ecr-registry-helper-cm
+            command:
+              - /bin/sh
+              - -c
+              - |-
+                ECR_TOKEN=`aws ecr get-login-password --region ${AWS_REGION}`
+                NAMESPACE_NAME=default
+                kubectl delete secret --ignore-not-found $DOCKER_SECRET_NAME -n $NAMESPACE_NAME
+                kubectl create secret docker-registry $DOCKER_SECRET_NAME \
+                --docker-server=https://${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                --docker-username=AWS \
+                --docker-password="${ECR_TOKEN}" \
+                --namespace=$NAMESPACE_NAME
+                echo "Secret was successfully updated at $(date)"
+          restartPolicy: Never
+---
