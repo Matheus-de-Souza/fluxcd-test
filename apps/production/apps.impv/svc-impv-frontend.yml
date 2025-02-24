@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-impv-frontend
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: impv-frontend
+  ports:
+  - port: 80

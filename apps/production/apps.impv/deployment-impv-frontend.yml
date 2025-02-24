@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: impv-frontend-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: impv-frontend
+  template:
+    metadata:
+      labels:
+        app: impv-frontend
+    spec:
+      containers:
+      - name: impv-frontend
+        image: 905418363924.dkr.ecr.us-east-2.amazonaws.com/impv-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+        - name: aws-ecr-registry
